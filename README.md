@@ -1,2 +1,2 @@
-# hitory
-hitory sat solver
+# Hitory
+Hitory sat solver
