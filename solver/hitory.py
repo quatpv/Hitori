@@ -15,8 +15,10 @@ class HirotySAT():
         self.number_of_variables = 0
         self.number_of_clauses = 0
         self.running_time = 0
+        self.max_var_in_borad = 0
+        self.white = 0
 
-    def get_color(self, output):
+    def get_color_cc(self, output):
         result = np.full((self.rows, self.columns), True, dtype=bool)
         for k in output:
             positive = int(k) > 0
@@ -27,6 +29,21 @@ class HirotySAT():
                 result[(k-1) // self.columns][(k-1) % self.columns] = False
         
         return result
+    
+
+    def get_color_ce(self, arr, max_var_in_borad, white):
+        result = np.full((self.rows, self.columns), True, dtype=bool)
+        leng = len(arr)
+        for d in range(leng):
+            k = int(arr[d])
+            if k == 0 or k > max_var_in_borad or k < -1*max_var_in_borad:
+                break
+            for i in range(self.rows):
+                for j in range(self.columns):
+                    if white[i][j] == -k:
+                        result[i][j] = False
+                        break
+        return result
 
     def encode(self):
         if self.method == 'CC' or self.method == "ChainAndCircle":
@@ -35,13 +52,15 @@ class HirotySAT():
             alg.cnf_rule_01()
             alg.cnf_rule_02()
             alg.cnf_rule_03()
-            # print()
-            # print()
-            # with open()
 
         elif self.method == 'CE' or self.method == "ConnectivityEncoding":
-            solver = sat.MINISAT()
-            connectivity_encoding.ConnectivityEncoding(self.rows, self.columns, solver)
+            alg = connectivity_encoding.ConnectivityEncoding(self.rows, self.columns, self.value, self.solver)
+            alg.encode_vars()
+            alg.cnf_rule_01()
+            alg.cnf_rule_02()
+            alg.cnf_rule_03()
+            self.max_var_in_borad = alg.max_var_in_borad
+            self.white = alg.white
 
         self.number_of_variables = alg.get_number_of_variables()
         self.number_of_clauses = self.solver.get_number_of_clauses()
@@ -59,12 +78,16 @@ class HirotySAT():
         os.system(command)
         self.running_time = time.time() - start_time
         
-        with open(self.configs['cnf_out'], 'r') as cnf_out:
-            lines = [line.strip() for line in cnf_out.readlines()]
-        
-        output = lines[1].split(" ")[:-1]
-        self.result = self.get_color(output)
-    
-
-
-    
+        if self.method == 'CC':
+            with open(self.configs['cnf_out'], 'r') as cnf_out:
+                lines = [line.strip() for line in cnf_out.readlines()]
+            
+            output = lines[1].split(" ")[:-1]
+            self.result = self.get_color_cc(output)
+        elif self.method == 'CE':
+            with open(self.configs['cnf_out'], 'r') as cnf_out:
+                lines = [line.strip() for line in cnf_out.readlines()]
+            
+            output = lines[1].split(" ")[:-1]
+            self.result = self.get_color_ce(output, self.max_var_in_borad, self.white)
+            
