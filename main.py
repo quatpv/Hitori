@@ -6,7 +6,7 @@ configs = json.load(open('configs.json', 'r'))
 
 n = 4
 value = [[2,2,2,2],[2,2,2,3],[2,3,2,1],[3,4,1,2]]
-method = 'CC'
+method = 'CE'
 
 
 def hitory_solver(n, value, configs, method):
