@@ -17,6 +17,7 @@ class HirotySAT():
         self.running_time = 0
         self.max_var_in_borad = 0
         self.white = 0
+        self.satisfiable = False
 
     def get_color_cc(self, output):
         result = np.full((self.rows, self.columns), True, dtype=bool)
@@ -81,13 +82,21 @@ class HirotySAT():
         if self.method == 'CC':
             with open(self.configs['cnf_out'], 'r') as cnf_out:
                 lines = [line.strip() for line in cnf_out.readlines()]
-            
-            output = lines[1].split(" ")[:-1]
-            self.result = self.get_color_cc(output)
+            if len(lines) > 1:
+                self.satisfiable = True
+                output = lines[1].split(" ")[:-1]
+                self.result = self.get_color_cc(output)
+            else:
+                self.satisfiable = False
+
         elif self.method == 'CE':
             with open(self.configs['cnf_out'], 'r') as cnf_out:
                 lines = [line.strip() for line in cnf_out.readlines()]
-            
-            output = lines[1].split(" ")[:-1]
-            self.result = self.get_color_ce(output, self.max_var_in_borad, self.white)
+            if len(lines) > 1:
+                self.satisfiable = True
+                output = lines[1].split(" ")[:-1]
+                self.result = self.get_color_ce(output, self.max_var_in_borad, self.white)
+            else:
+                self.satisfiable = False
+
             
