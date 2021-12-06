@@ -14,7 +14,6 @@ class HirotySAT():
         self.method = method
         self.number_of_variables = 0
         self.number_of_clauses = 0
-        self.running_time = 0
         self.max_var_in_borad = 0
         self.white = 0
         self.satisfiable = False
@@ -75,9 +74,7 @@ class HirotySAT():
         
     def decode(self):
         command = f"minisat {self.configs['cnf_in']} {self.configs['cnf_out']}"
-        start_time = time.time()
         os.system(command)
-        self.running_time = time.time() - start_time
         
         if self.method == 'CC':
             with open(self.configs['cnf_out'], 'r') as cnf_out:

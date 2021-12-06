@@ -6,7 +6,7 @@ def read_map(input_file):
         for i in range(m):
             id = f.readline()
             for j in range(n):
-                line = [int(x) for x in f.readline().split('\t')]
+                line = [int(x) for x in f.readline().strip().split('\t')]
                 value.append(line)
             break
     return n, value
