@@ -1,12 +1,12 @@
 from solver.hitory import HirotySAT
 import json
 import time
+from typing import List
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 configs = json.load(open('configs.json', 'r'))
-
-n = 4
-value = [[2,2,2,2],[2,2,2,3],[2,3,2,1],[3,4,1,2]]
-method = 'CE'
 
 
 def hitory_solver(n, value, configs, method):
@@ -27,5 +27,38 @@ def hitory_solver(n, value, configs, method):
     else:
         print("No solution")
 
-if __name__ == '__main__':
-    hitory_solver(n, value, configs, method)
+    return {
+        "ok": alg.satisfiable,
+        "running_time": running_time,
+        "number_of_clauses": alg.number_of_clauses,
+        "number_of_variables": alg.number_of_variables,
+        "result": alg.result.tolist(),
+    }
+
+
+class Payload(BaseModel):
+    rows: int
+    cols: int
+    method: str
+    data: List[List[int]]
+
+
+app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/hitori-solver")
+def get_solution(payload: Payload):
+    return hitory_solver(payload.rows, payload.data, configs, payload.method)
