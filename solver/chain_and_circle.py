@@ -14,7 +14,7 @@ class ChainAndCircle:
     def encode_vars(self):
         for i in range(self.rows):
             for j in range(self.columns):
-                self.white[i][j] = i*self.columns + j + 1    
+                self.white[i][j] = i*self.columns + j + 1
 
     # CNF Rule 1
     def cnf_rule_01(self):
@@ -105,7 +105,7 @@ class ChainAndCircle:
         if (x == 0 or y == 0 or x == self.rows-1 or y == self.columns-1) and self.white[x][y] > chain[0]:
             ints = np.full(len(chain) + 1, 0, dtype=int)
             for i in range(len(chain)):
-                    ints[i]=chain[i]
+                ints[i]=chain[i]
             ints[len(chain)] = self.white[x][y]
             self.solver.add_a_clause(ints)
             return chain
@@ -156,14 +156,14 @@ class ChainAndCircle:
             for j in range(self.columns):
                 cycle = self.find_cycle_tmp(i, j, cycle)
 
-        # tim chain voi nhung O bat dau o bien cua bang
+        # tim chain voi nhung o bat dau o bien cua bang
         for i in range(self.rows):
-            cycle = self.find_chain_tmp(i, 0, cycle)
-            cycle = self.find_chain_tmp(i, self.columns-1, cycle)
+            chain = self.find_chain_tmp(i, 0, cycle)
+            chain = self.find_chain_tmp(i, self.columns-1, chain)
 
         for j in range(1, self.columns - 1):
-            cycle = self.find_chain_tmp(0, j, cycle)
-            cycle = self.find_chain_tmp(self.rows-1, j, cycle)
+            chain = self.find_chain_tmp(0, j, chain)
+            chain = self.find_chain_tmp(self.rows-1, j, chain)
 
     def get_result(self):
         return self.is_able_paint

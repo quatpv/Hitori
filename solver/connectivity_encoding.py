@@ -6,7 +6,7 @@ class ConnectivityEncoding:
         self.columns = columns
         self.value_of_cell = value
         self.solver = solver
-        self.not_fix = np.full((self.rows, self.columns), False, dtype=bool)
+        self.is_able_paint = np.full((self.rows, self.columns), False, dtype=bool)
         self.zones = np.full((self.rows, self.columns), 0, dtype=int)
         self.path = np.full((self.rows, self.columns, self.rows, self.columns), 0, dtype=int)
         self.white = np.full((self.rows, self.columns), 0, dtype=int)
@@ -19,22 +19,22 @@ class ConnectivityEncoding:
             for j in range(self.columns):            
                 for k in range(j+1, self.columns):
                     if self.value_of_cell[i][j] == self.value_of_cell[i][k]:
-                        self.not_fix[i][j] = True
-                        self.not_fix[i][k] = True
+                        self.is_able_paint[i][j] = True
+                        self.is_able_paint[i][k] = True
 
 
         for j in range(self.columns):
             for i in range(self.rows - 1):
                 for k in range(i+1, self.rows):
                     if self.value_of_cell[i][j] == self.value_of_cell[k][j]:
-                        self.not_fix[i][j] = True
-                        self.not_fix[k][j] = True
+                        self.is_able_paint[i][j] = True
+                        self.is_able_paint[k][j] = True
 
 
         # var of board
         for i in range(self.rows):
             for j in range(self.columns):
-                if self.not_fix[i][j]:
+                if self.is_able_paint[i][j]:
                     self.number_of_vars += 1
                     self.white[i][j] = self.number_of_vars
                     
@@ -45,7 +45,7 @@ class ConnectivityEncoding:
 
         for i in range(self.rows):
             for j in range(self.columns):
-                if self.not_fix[i][j] and self.zones[i][j] == 0:
+                if self.is_able_paint[i][j] and self.zones[i][j] == 0:
                     zone_number += 1
                     self.find_zone(i,j,zone_number)
         
@@ -61,13 +61,13 @@ class ConnectivityEncoding:
 
     def find_zone(self, i, j, zone_number):
         self.zones[i][j] = zone_number
-        if i+1 < self.rows and j+1 < self.columns and self.not_fix[i+1][j+1] and self.zones[i+1][j+1] == 0:
+        if i+1 < self.rows and j+1 < self.columns and self.is_able_paint[i+1][j+1] and self.zones[i+1][j+1] == 0:
             self.find_zone(i+1, j+1, zone_number)
-        if i-1 >= 0 and j+1 < self.columns and self.not_fix[i-1][j+1] and self.zones[i-1][j+1] == 0:
+        if i-1 >= 0 and j+1 < self.columns and self.is_able_paint[i-1][j+1] and self.zones[i-1][j+1] == 0:
             self.find_zone(i-1, j+1, zone_number)
-        if i+1 < self.rows and j-1 >= 0 and self.not_fix[i+1][j-1] and self.zones[i+1][j-1] == 0:
+        if i+1 < self.rows and j-1 >= 0 and self.is_able_paint[i+1][j-1] and self.zones[i+1][j-1] == 0:
             self.find_zone(i+1, j-1, zone_number)
-        if i-1 >= 0 and j-1 >= 0 and self.not_fix[i-1][j-1] and self.zones[i-1][j-1] == 0:
+        if i-1 >= 0 and j-1 >= 0 and self.is_able_paint[i-1][j-1] and self.zones[i-1][j-1] == 0:
             self.find_zone(i-1, j-1, zone_number)
     
     def in_matrix(self, x, y):
@@ -94,11 +94,11 @@ class ConnectivityEncoding:
     def cnf_rule_02(self):
         for i in range(self.rows):
             for j in range(self.columns):
-                if self.not_fix[i][j]:         
-                    if i-1 >= 0 and self.not_fix[i-1][j]:
+                if self.is_able_paint[i][j]:         
+                    if i-1 >= 0 and self.is_able_paint[i-1][j]:
                         self.solver.add_a_clause([self.white[i][j], self.white[i-1][j]])
 
-                    if j-1 >= 0 and self.not_fix[i][j-1]:
+                    if j-1 >= 0 and self.is_able_paint[i][j-1]:
                         self.solver.add_a_clause([self.white[i][j],self.white[i][j-1]])
     
     # Rule 3
@@ -107,10 +107,10 @@ class ConnectivityEncoding:
 
         for i in range(self.rows):
             for j in range(self.columns):
-                if self.not_fix[i][j]:
+                if self.is_able_paint[i][j]:
                     self.solver.add_a_clause([-self.path[i][j][i][j]])
                 
-                    if self.in_matrix(i+1, j+1) and self.not_fix[i+1][j+1]:
+                    if self.in_matrix(i+1, j+1) and self.is_able_paint[i+1][j+1]:
                         if i == 0 or i == self.rows-1 or j == 0 or j == self.columns-1:
                             self.solver.add_a_clause([self.white[i][j], self.white[i+1][j+1], self.path[i][j][i+1][j+1]])
                             
@@ -119,7 +119,7 @@ class ConnectivityEncoding:
                         else:
                             self.solver.add_a_clause([self.white[i][j], self.white[i+1][j+1], self.path[i][j][i+1][j+1], self.path[i+1][j+1][i][j]])
                     
-                    if self.in_matrix(i+1, j-1) and self.not_fix[i+1][j-1]:
+                    if self.in_matrix(i+1, j-1) and self.is_able_paint[i+1][j-1]:
                         if i == 0 or i == self.rows-1 or j == 0 or j == self.columns-1:
                             self.solver.add_a_clause([self.white[i][j], self.white[i+1][j-1], self.path[i][j][i+1][j-1]])
 
@@ -131,18 +131,18 @@ class ConnectivityEncoding:
 
         for i in range(self.rows):
             for j in range(self.columns):
-                if self.not_fix[i][j]:
-                    if self.in_matrix(i+1, j+1) and self.in_matrix(i+1, j-1) and self.not_fix[i+1][j+1] and self.not_fix[i+1][j-1]:
+                if self.is_able_paint[i][j]:
+                    if self.in_matrix(i+1, j+1) and self.in_matrix(i+1, j-1) and self.is_able_paint[i+1][j+1] and self.is_able_paint[i+1][j-1]:
                         self.solver.add_a_clause([-self.path[i+1][j+1][i][j], -self.path[i+1][j-1][i][j]])
-                    if self.in_matrix(i+1, j+1) and self.in_matrix(i-1, j+1) and self.not_fix[i+1][j+1] and self.not_fix[i-1][j+1]:
+                    if self.in_matrix(i+1, j+1) and self.in_matrix(i-1, j+1) and self.is_able_paint[i+1][j+1] and self.is_able_paint[i-1][j+1]:
                         self.solver.add_a_clause([-self.path[i+1][j+1][i][j], -self.path[i-1][j+1][i][j]])
-                    if self.in_matrix(i+1, j+1) and self.in_matrix(i-1, j-1) and self.not_fix[i+1][j+1] and self.not_fix[i-1][j-1]:
+                    if self.in_matrix(i+1, j+1) and self.in_matrix(i-1, j-1) and self.is_able_paint[i+1][j+1] and self.is_able_paint[i-1][j-1]:
                         self.solver.add_a_clause([-self.path[i+1][j+1][i][j], -self.path[i-1][j-1][i][j]])
-                    if self.in_matrix(i+1, j-1) and self.in_matrix(i-1, j-1) and self.not_fix[i+1][j-1] and self.not_fix[i-1][j-1]:
+                    if self.in_matrix(i+1, j-1) and self.in_matrix(i-1, j-1) and self.is_able_paint[i+1][j-1] and self.is_able_paint[i-1][j-1]:
                         self.solver.add_a_clause([-self.path[i+1][j-1][i][j], -self.path[i-1][j-1][i][j]])
-                    if self.in_matrix(i+1, j-1) and self.in_matrix(i-1, j+1) and self.not_fix[i+1][j-1] and self.not_fix[i-1][j+1]:
+                    if self.in_matrix(i+1, j-1) and self.in_matrix(i-1, j+1) and self.is_able_paint[i+1][j-1] and self.is_able_paint[i-1][j+1]:
                         self.solver.add_a_clause([-self.path[i+1][j-1][i][j], -self.path[i-1][j+1][i][j]])
-                    if self.in_matrix(i-1, j+1) and self.in_matrix(i-1, j-1) and self.not_fix[i-1][j+1] and self.not_fix[i-1][j-1]:
+                    if self.in_matrix(i-1, j+1) and self.in_matrix(i-1, j-1) and self.is_able_paint[i-1][j+1] and self.is_able_paint[i-1][j-1]:
                         self.solver.add_a_clause([-self.path[i-1][j+1][i][j], -self.path[i-1][j-1][i][j]])
 
         # Path(x,y,a,b) and Path(a,b,a+1,b+1)=> Path(x,y,a+1,b+1) and 
