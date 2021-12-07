@@ -64,7 +64,7 @@ class ChainAndCircle:
 
         for a in [-1, 1]:
             for b in [-1, 1]:
-                if x+a >= 0 and x+a < self.rows and y+b >= 0 and y+b < self.columns and self.white[x+a][y+b] < len(cycle) and not cycle[len(cycle)-1] == self.white[x+a][y+b]:
+                if x+a >= 0 and x+a < self.rows and y+b >= 0 and y+b < self.columns and not cycle[len(cycle)-1] == self.white[x+a][y+b]:
                     k[c] = get_index(cycle, self.white[x+a][y+b])
                     c += 1
 
